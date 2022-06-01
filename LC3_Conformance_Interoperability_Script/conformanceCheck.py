@@ -303,7 +303,7 @@ def align_files(file_1, file_2, file_2_out):
 
 
 def build_tools():
-    call('gcc -lm rms.c -o rms')
+    call('gcc -o rms rms.c -lm')
 
 
 # call sox with args in repeatable mode, lazy skips execution if output already exists
