@@ -43,6 +43,7 @@ import sys
 import argparse
 from argparse import RawTextHelpFormatter
 from encoder import Encoder
+from decoder import Decoder
 from hci import HCI
 
 # Setup the default serial port settings
@@ -71,15 +72,15 @@ parser.add_argument('baud', nargs='?', default=defaultBaud,
 subparsers = parser.add_subparsers(dest='command')
 
 encode_parser = subparsers.add_parser("E", help="Encode")
-dencode_parser = subparsers.add_parser("D", help="Decode")
+decode_parser = subparsers.add_parser("D", help="Decode")
 
 encode_parser.add_argument('INPUT', help='Input wav file')
 encode_parser.add_argument('OUTPUT', help='Output wav file')
 encode_parser.add_argument('BITRATE', help='Bitrate for encoding')
 encode_parser.add_argument('-fm', '--frame_ms', default="10", help="Frame duration in ms, must be 10 or 7.5, default 10")
 
-dencode_parser.add_argument('INPUT', help='Input wav file')
-dencode_parser.add_argument('OUTPUT', help='Output wav file')
+decode_parser.add_argument('INPUT', help='Input wav file')
+decode_parser.add_argument('OUTPUT', help='Output wav file')
 
 args = parser.parse_args()
 
@@ -116,10 +117,11 @@ for arg in args.__dict__:
 
 if(args.command == "E"):
     print("Encoding")
-
-    # encoder = Encoder()
     Encoder.encode(hci, args.INPUT, args.OUTPUT, args.BITRATE, args.frame_ms)
 
 else:
-    print("TODO: Decode")
+    print("Decoding")
+    Decoder.decode(hci, args.INPUT, args.OUTPUT)
+
+
 

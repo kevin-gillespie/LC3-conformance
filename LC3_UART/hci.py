@@ -132,8 +132,26 @@ class HCI:
 
             status_string+= '%02X'%packet_len0
             status_string+= '%02X'%packet_len1
-            packet_len = packet_len0 + packet_len1
+            packet_len = packet_len0 + (packet_len1 << 8)
             packet_len = int(packet_len)
+
+        elif(evt == 7):
+            # Receive the encode event status
+            status = self.serial_port.read(size=1)
+            status = int(codecs.encode(status, 'hex_codec'),16)
+            status_string+= '%02X'%status
+
+            # Receive the length, byte swap from LSB first
+            packet_len0 = self.serial_port.read(size=1)
+            packet_len0 = int(codecs.encode(packet_len0, 'hex_codec'),16)
+            packet_len1 = self.serial_port.read(size=1)
+            packet_len1 = int(codecs.encode(packet_len1, 'hex_codec'),16)
+            
+            # Length is number of 16 bit samples
+            status_string+= '%02X'%packet_len0
+            status_string+= '%02X'%packet_len1
+            packet_len = packet_len0 + (packet_len1 << 8)
+            packet_len = int(packet_len*2)
 
         else:
             print("Error: unknown evt = "+str(evt))
@@ -209,13 +227,13 @@ class HCI:
 
         # Get the number of bytes
         byteCount0 = int(status_evt[4:6],16)
-        byteCount1 = (int(status_evt[6:8],16) << 16)
+        byteCount1 = int(status_evt[6:8],16)
 
         # Write the number of bytes at the start of the frame
         frameBytes = bytearray()
         frameBytes.append(byteCount0)
         frameBytes.append(byteCount1)
-        byteCount = byteCount0 + (byteCount1 << 16)
+        byteCount = byteCount0 + (byteCount1 << 8)
 
         # Split the frame into bytes
         chunks, chunk_size = byteCount*2, 2
@@ -227,4 +245,49 @@ class HCI:
 
         # Return the encoded data
         return frameBytes
-        
+    
+    def init_decoder(self, frame_len, sample_rate, bitrate):
+        print("Initializing decoder")
+
+        # Send the command to initialize the encoder
+        frame_len_str = self.parseIntHexString(frame_len, 2)
+        sample_rate_str = self.parseIntHexString(sample_rate, 4)
+        bitrate_str = self.parseIntHexString(bitrate, 8)
+
+        status_evt = self.send_command("03"+frame_len_str+sample_rate_str+bitrate_str)
+
+        # Return the status
+        if("0501" in status_evt):
+            print("Error initializing encoder")
+            return False
+
+        return True
+
+    def decode(self, data):
+
+        # Send the command to encode the samples
+        dataHexString = data.hex()
+        status_evt = self.send_command("04"+dataHexString, print_cmd=False)
+
+        # Check the error code
+        if(status_evt[:4] != "0700"):
+            return None
+
+        # Get the number of samples
+        sampleCount0 = int(status_evt[4:6],16)
+        sampleCount1 = int(status_evt[6:8],16)
+
+        sampleCount = sampleCount0 + (sampleCount1 << 8)
+
+        # Split the frame into samples
+        chunks, chunk_size = sampleCount*4, 4
+        frameSampleString = [ status_evt[8:][i:i+chunk_size] for i in range(0, chunks, chunk_size) ]
+
+        # Convert data from string to bytes
+        frameSamples = bytearray()
+        for sample in frameSampleString:
+            frameSamples.append(int(sample[:2],16))
+            frameSamples.append(int(sample[2:],16))
+
+        # Return the encoded data
+        return frameSamples

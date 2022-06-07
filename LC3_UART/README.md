@@ -67,7 +67,7 @@ Returns the decoded samples.
 - **Byte 1:1** : Status
     - 0: Success
     - 1: Error
-- **Byte 2:3** : Number of bytes
+- **Byte 2:3** : Number of samples
 - **Byte 4:2n-4** : Decoded samples, where n is the number of samples
 
 ## Encoding sequence
