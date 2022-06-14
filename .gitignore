@@ -1,0 +1,3 @@
+*.log
+*__pycache__
+*lc3_conformance_*
