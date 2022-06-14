@@ -159,7 +159,7 @@ class HCI:
 
         else:
             print("Error: unknown evt = "+str(evt))
-            return
+            return None
 
         # Read the payload and append to the event
         payload = self.serial_port.read(size=packet_len)
@@ -191,7 +191,7 @@ class HCI:
      # Send a HCI command to the serial port. Will add a small delay and wait for
      # and print an HCI event by default.
     ################################################################################
-    def send_command(self, packet, resp = True, delay = 0, print_cmd = True):
+    def send_command(self, packet, resp = True, delay = 0, print_cmd = True, retryCount = 10):
         # Send the command and data
         if(print_cmd):
           print(str(datetime.datetime.now()) + " >", packet)
@@ -200,7 +200,19 @@ class HCI:
         sleep(delay)
 
         if(resp):
-            return self.wait_event(print_evt = print_cmd)
+            status_evt = self.wait_event(print_evt = print_cmd)
+            while(status_evt == None):
+                # Send the command to encode the samples
+                self.serial_port.write(bytearray.fromhex(packet))
+                status_evt = self.wait_event(print_evt = print_cmd)
+
+                # Retry if there is an error
+                retryCount = retryCount - 1
+                if(retryCount == 0):
+                    return None
+
+            return status_evt
+
 
     def init_encoder(self, frame_len, sample_rate, bitrate):
         print("Initializing encoder")
