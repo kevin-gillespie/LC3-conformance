@@ -2,6 +2,20 @@
 All fields are sent LSB first. 0x12345678 will be transmitted as 78563412. All samples are 
 16 bit signed integers. 
 
+## Serial port config
+Configure the serial port for low_latency to reduce test time
+
+<https://projectgus.com/2011/10/notes-on-ftdi-latency-with-arduino/>
+
+``` bash
+cat /sys/bus/usb-serial/devices/ttyUSB0/latency_timer
+16
+echo 1 > /sys/bus/usb-serial/devices/ttyUSB0/latency_timer
+cat /sys/bus/usb-serial/devices/ttyUSB0/latency_timer
+1
+setserial /dev/serial/by-id/usb-FTDI_FT230X_Basic_UART_D30A1X9V-if00-port0 low_latency
+```
+
 ## OPCODES
 The first byte of the packet denotes the OPCODE. OPCODES are separated into Commands and Events.
 Commands are send from the host to the controller. Events are sent from the controller to the host. 

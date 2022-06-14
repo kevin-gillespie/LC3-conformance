@@ -110,7 +110,7 @@ class HCI:
         evt=int(codecs.encode(evt, 'hex_codec'),16)
         status_string = '%02X'%evt
 
-        if(evt == 5):
+        if(evt == 6):
             # Receive the status event
             hdr = self.serial_port.read(size=2)
             hdr=int(codecs.encode(hdr, 'hex_codec'),16)
@@ -118,7 +118,7 @@ class HCI:
             status_string+= '%04X'%hdr
 
 
-        elif(evt == 6):
+        elif(evt == 7):
             # Receive the encode event status
             status = self.serial_port.read(size=1)
             status = int(codecs.encode(status, 'hex_codec'),16)
@@ -135,7 +135,7 @@ class HCI:
             packet_len = packet_len0 + (packet_len1 << 8)
             packet_len = int(packet_len)
 
-        elif(evt == 7):
+        elif(evt == 8):
             # Receive the encode event status
             status = self.serial_port.read(size=1)
             status = int(codecs.encode(status, 'hex_codec'),16)
@@ -152,6 +152,10 @@ class HCI:
             status_string+= '%02X'%packet_len1
             packet_len = packet_len0 + (packet_len1 << 8)
             packet_len = int(packet_len*2)
+
+        elif(evt == 9):
+            # Read the execution time
+            packet_len = 4
 
         else:
             print("Error: unknown evt = "+str(evt))
@@ -187,7 +191,7 @@ class HCI:
      # Send a HCI command to the serial port. Will add a small delay and wait for
      # and print an HCI event by default.
     ################################################################################
-    def send_command(self, packet, resp = True, delay = 0.01, print_cmd = True):
+    def send_command(self, packet, resp = True, delay = 0, print_cmd = True):
         # Send the command and data
         if(print_cmd):
           print(str(datetime.datetime.now()) + " >", packet)
@@ -209,7 +213,7 @@ class HCI:
         status_evt = self.send_command("01"+frame_len_str+sample_rate_str+bitrate_str)
 
         # Return the status
-        if("0501" in status_evt):
+        if("0600" not in status_evt):
             print("Error initializing encoder")
             return False
 
@@ -222,7 +226,7 @@ class HCI:
         status_evt = self.send_command("02"+samplesHexString, print_cmd=False)
 
         # Check the error code
-        if(status_evt[:4] != "0600"):
+        if(status_evt[:4] != "0700"):
             return None
 
         # Get the number of bytes
@@ -243,8 +247,15 @@ class HCI:
         for byte in frameBytesString:
             frameBytes.append(int(byte,16))
 
+        # Get the execution time
+        status_evt = self.send_command("05", print_cmd=False)
+
+        # Convert the time to an integer
+        execTimeString = status_evt[8:10] + status_evt[6:8] + status_evt[4:6] + status_evt[2:4]
+        execTime = int(execTimeString, 16)
+
         # Return the encoded data
-        return frameBytes
+        return frameBytes, execTime
     
     def init_decoder(self, frame_len, sample_rate, bitrate):
         print("Initializing decoder")
@@ -257,8 +268,8 @@ class HCI:
         status_evt = self.send_command("03"+frame_len_str+sample_rate_str+bitrate_str)
 
         # Return the status
-        if("0501" in status_evt):
-            print("Error initializing encoder")
+        if("0600" not in status_evt):
+            print("Error initializing decoder")
             return False
 
         return True
@@ -270,7 +281,7 @@ class HCI:
         status_evt = self.send_command("04"+dataHexString, print_cmd=False)
 
         # Check the error code
-        if(status_evt[:4] != "0700"):
+        if(status_evt[:4] != "0800"):
             return None
 
         # Get the number of samples
@@ -289,5 +300,12 @@ class HCI:
             frameSamples.append(int(sample[:2],16))
             frameSamples.append(int(sample[2:],16))
 
+        # Get the execution time
+        status_evt = self.send_command("05", print_cmd=False)
+
+        # Convert the time to an integer
+        execTimeString = status_evt[8:10] + status_evt[6:8] + status_evt[4:6] + status_evt[2:4]
+        execTime = int(execTimeString, 16)
+
         # Return the encoded data
-        return frameSamples
+        return frameSamples, execTime

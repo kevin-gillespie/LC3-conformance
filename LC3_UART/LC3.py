@@ -41,14 +41,14 @@
 import serial
 import sys
 import argparse
+import os
 from argparse import RawTextHelpFormatter
 from encoder import Encoder
 from decoder import Decoder
 from hci import HCI
 
 # Setup the default serial port settings
-defaultBaud=115200
-defaultSP="/dev/ttyUSB0"
+defaultBaud=2000000
 
 # Setup the command line description text
 descText = """
@@ -63,11 +63,6 @@ Serial port is configured as 8N1, no flow control, default baud rate of """+str(
 
 # Parse the command line arguments
 parser = argparse.ArgumentParser(description=descText, formatter_class=RawTextHelpFormatter)
-parser.add_argument('serialPort', nargs='?', default=defaultSP,
-                    help='Serial port path or COM#, default: '+defaultSP)
-parser.add_argument('baud', nargs='?', default=defaultBaud,
-                    help='Serial port baud rate, default: '+str(defaultBaud))
-
 
 subparsers = parser.add_subparsers(dest='command')
 
@@ -82,12 +77,26 @@ encode_parser.add_argument('-fm', '--frame_ms', default="10", help="Frame durati
 decode_parser.add_argument('INPUT', help='Input wav file')
 decode_parser.add_argument('OUTPUT', help='Output wav file')
 
-args = parser.parse_args()
+parser.add_argument('--serialPort', '-s', nargs='?',
+                    help='Serial port path or COM#')
+parser.add_argument('--baud', '-b', nargs='?', default=defaultBaud,
+                    help='Serial port baud rate, default: '+str(defaultBaud))
 
+args = parser.parse_args()
 
 if(args.command == None):
     print("Must select either E or D")
+    parser.print_help()
     exit(1)
+
+if(args.serialPort == None):
+    # Try and find an environment variable
+    try:
+        args.serialPort = os.environ["LC3_SERIAL"]
+    except KeyError:
+        print("Must define LC3_SERIAL environment variable or specify with -s <serialPort>")
+        parser.print_help()
+        exit(1)
 
 # Open the serial port
 try:
@@ -117,11 +126,8 @@ for arg in args.__dict__:
 
 if(args.command == "E"):
     print("Encoding")
-    Encoder.encode(hci, args.INPUT, args.OUTPUT, args.BITRATE, args.frame_ms)
+    sys.exit(Encoder.encode(hci, args.INPUT, args.OUTPUT, args.BITRATE, args.frame_ms))
 
 else:
     print("Decoding")
-    Decoder.decode(hci, args.INPUT, args.OUTPUT)
-
-
-
+    sys.exit(Decoder.decode(hci, args.INPUT, args.OUTPUT))

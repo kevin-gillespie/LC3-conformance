@@ -40,6 +40,7 @@
 
 import wave
 from hci import HCI
+import os
 
 def chunks(lst, n):
     """Yield successive n-sized chunks from lst."""
@@ -92,7 +93,8 @@ class Decoder:
         print("signalLen: ", signalLen)
 
         # Send the command to initialize the decoder
-        hci.init_decoder(frameLen, frameRate, bitRate)
+        if(not hci.init_decoder(frameLen, frameRate, bitRate)):
+            return 1
 
         # Setup the wav file
         output_wav = wave.open(output,'wb')
@@ -116,8 +118,11 @@ class Decoder:
 
             # Read the frame, decode and write to the wave file
             frameData = input_bin.read(frameBytes)
-            decodedSamples = hci.decode(frameData)
+            decodedSamples, execTime = hci.decode(frameData)
             output_wav.writeframes(decodedSamples)
+
+            print(os.path.basename(input),",",frameRate,",",bitRate,",",execTime,", decode")
+
         
         output_wav.close()
 

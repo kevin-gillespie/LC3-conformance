@@ -40,6 +40,7 @@
 
 import wave
 from hci import HCI
+import os
 
 def chunks(lst, n):
     """Yield successive n-sized chunks from lst."""
@@ -77,7 +78,8 @@ class Encoder:
         print("Frame count  :", frame_count)
 
         # Send the command to initialize the encoder
-        hci.init_encoder(frame_len, framerate, bitrate)
+        if(not hci.init_encoder(frame_len, framerate, bitrate)):
+            return 1
 
         # wave class calls each sample a frame, whereas we're calling a frame 
         # a set of samples equaling frame_len
@@ -101,14 +103,16 @@ class Encoder:
         # Save the encoded samples to the output bin file
         for frame in frames:
             # Send the encode command for each frame
-            encoded_frame = hci.encode(frame)
+            encoded_frame, execTime = hci.encode(frame)
 
             if(encoded_frame == None):
                 print("Error encoding frame")
                 return 1
-                
+
             output_bin.write(encoded_frame)
 
+            print(os.path.basename(input),",",framerate,",",bitrate,",",execTime,", encode")
+                
         output_bin.close();
 
         return 0
