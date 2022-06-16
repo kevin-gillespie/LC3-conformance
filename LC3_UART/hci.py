@@ -105,7 +105,7 @@ class HCI:
         evt=self.serial_port.read(size=1)
         if(len(evt) == 0):
             self.serial_port.flush()
-            return ""
+            return None
 
         evt=int(codecs.encode(evt, 'hex_codec'),16)
         status_string = '%02X'%evt
@@ -202,7 +202,9 @@ class HCI:
         if(resp):
             status_evt = self.wait_event(print_evt = print_cmd)
             while(status_evt == None):
-                # Send the command to encode the samples
+                # Resend the command
+                if(print_cmd):
+                    print(str(datetime.datetime.now()) + " >", packet)
                 self.serial_port.write(bytearray.fromhex(packet))
                 status_evt = self.wait_event(print_evt = print_cmd)
 
