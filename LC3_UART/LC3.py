@@ -46,6 +46,11 @@ from argparse import RawTextHelpFormatter
 from encoder import Encoder
 from decoder import Decoder
 from hci import HCI
+from pathlib import Path
+import fcntl
+
+
+lockfileName = "serial_lockfile.txt"
 
 # Setup the default serial port settings
 defaultBaud=2000000
@@ -98,6 +103,20 @@ if(args.serialPort == None):
         parser.print_help()
         exit(1)
 
+# Get the serial port lock to prevent UART interference 
+if(not os.path.exists(lockfileName)):
+    Path(lockfileName).touch()
+
+# Open the file
+lockfile = open(lockfileName, 'r+')
+
+# Write the PID to the file
+lockfile.truncate(0)
+lockfile.write(str(os.getpid())+"\n")
+
+# Acquire the lock, blocking
+fcntl.lockf(lockfile, fcntl.LOCK_EX)
+
 # Open the serial port
 try:
     # Open serial port
@@ -131,3 +150,7 @@ if(args.command == "E"):
 else:
     print("Decoding")
     sys.exit(Decoder.decode(hci, args.INPUT, args.OUTPUT))
+
+# Release the lock
+fcntl.lockf(lockfile, fcntl.LOCK_UN)
+lockfile.close()

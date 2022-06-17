@@ -159,6 +159,7 @@ class HCI:
 
         else:
             print("Error: unknown evt = "+str(evt))
+            self.serial_port.flush()
             return None
 
         # Read the payload and append to the event
