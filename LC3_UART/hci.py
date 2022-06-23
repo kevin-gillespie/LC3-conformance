@@ -240,7 +240,7 @@ class HCI:
 
         # Send the command to encode the samples
         samplesHexString = samples.hex()
-        status_evt = self.send_command("02"+samplesHexString, print_cmd=False)
+        status_evt = self.send_command("02"+samplesHexString, print_cmd=True)
 
         # Check the error code
         if(status_evt[:4] != "0700"):
@@ -265,7 +265,7 @@ class HCI:
             frameBytes.append(int(byte,16))
 
         # Get the execution time
-        status_evt = self.send_command("05", print_cmd=False)
+        status_evt = self.send_command("05", print_cmd=True)
 
         # Convert the time to an integer
         execTimeString = status_evt[8:10] + status_evt[6:8] + status_evt[4:6] + status_evt[2:4]
@@ -295,7 +295,7 @@ class HCI:
 
         # Send the command to encode the samples
         dataHexString = data.hex()
-        status_evt = self.send_command("04"+dataHexString, print_cmd=False)
+        status_evt = self.send_command("04"+dataHexString, print_cmd=True)
 
         # Check the error code
         if(status_evt[:4] != "0800"):
@@ -318,7 +318,7 @@ class HCI:
             frameSamples.append(int(sample[2:],16))
 
         # Get the execution time
-        status_evt = self.send_command("05", print_cmd=False)
+        status_evt = self.send_command("05", print_cmd=True)
 
         # Convert the time to an integer
         execTimeString = status_evt[8:10] + status_evt[6:8] + status_evt[4:6] + status_evt[2:4]
