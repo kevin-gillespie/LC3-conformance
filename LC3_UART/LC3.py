@@ -133,6 +133,11 @@ try:
     port.isOpen()
 except serial.SerialException as err:
     print(err)
+
+    # Release the lock
+    fcntl.lockf(lockfile, fcntl.LOCK_UN)
+    lockfile.close()
+    
     sys.exit(1)
 
 hci = HCI(port)
@@ -143,14 +148,18 @@ for arg in args.__dict__:
     if args.__dict__[arg] is not None:
         print(str(arg)+ ": "+str(args.__dict__[arg]))
 
+retval = 0
+
 if(args.command == "E"):
     print("Encoding")
-    sys.exit(Encoder.encode(hci, args.INPUT, args.OUTPUT, args.BITRATE, args.frame_ms))
+    retval = Encoder.encode(hci, args.INPUT, args.OUTPUT, args.BITRATE, args.frame_ms)
 
 else:
     print("Decoding")
-    sys.exit(Decoder.decode(hci, args.INPUT, args.OUTPUT))
+    retval = Decoder.decode(hci, args.INPUT, args.OUTPUT)
 
 # Release the lock
 fcntl.lockf(lockfile, fcntl.LOCK_UN)
 lockfile.close()
+
+sys.exit(retval)
