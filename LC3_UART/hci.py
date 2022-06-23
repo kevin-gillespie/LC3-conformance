@@ -104,7 +104,7 @@ class HCI:
         # Receive the event
         evt=self.serial_port.read(size=1)
         if(len(evt) == 0):
-            self.serial_port.flush()
+            self.serial_port.reset_input_buffer()
             return None
 
         evt=int(codecs.encode(evt, 'hex_codec'),16)
@@ -161,7 +161,7 @@ class HCI:
             print(str(datetime.datetime.now()) + "Error: unknown evt = "+str(evt))
             # Wait for the event to finish being received
             sleep(0.1)
-            self.serial_port.flush()
+            self.serial_port.reset_input_buffer()
             return None
 
         # Read the payload and append to the event
