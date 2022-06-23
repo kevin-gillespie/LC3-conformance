@@ -158,7 +158,7 @@ class HCI:
             packet_len = 4
 
         else:
-            print("Error: unknown evt = "+str(evt))
+            print(str(datetime.datetime.now()) + "Error: unknown evt = "+str(evt))
             # Wait for the event to finish being received
             sleep(0.1)
             self.serial_port.flush()
