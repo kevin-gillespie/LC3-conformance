@@ -53,7 +53,7 @@ import fcntl
 lockfileName = "serial_lockfile.txt"
 
 # Setup the default serial port settings
-defaultBaud=2000000
+defaultBaud=1000000
 
 # Setup the command line description text
 descText = """
@@ -137,7 +137,7 @@ except serial.SerialException as err:
     # Release the lock
     fcntl.lockf(lockfile, fcntl.LOCK_UN)
     lockfile.close()
-    
+
     sys.exit(1)
 
 hci = HCI(port)
