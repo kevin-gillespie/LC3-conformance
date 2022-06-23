@@ -159,6 +159,8 @@ class HCI:
 
         else:
             print("Error: unknown evt = "+str(evt))
+            # Wait for the event to finish being received
+            sleep(0.1)
             self.serial_port.flush()
             return None
 
