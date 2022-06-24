@@ -53,7 +53,7 @@ import fcntl
 lockfileName = "serial_lockfile.txt"
 
 # Setup the default serial port settings
-defaultBaud=1000000
+defaultBaud=2000000
 
 # Setup the command line description text
 descText = """

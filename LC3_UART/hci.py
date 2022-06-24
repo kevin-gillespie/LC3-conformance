@@ -194,7 +194,7 @@ class HCI:
      # Send a HCI command to the serial port. Will add a small delay and wait for
      # and print an HCI event by default.
     ################################################################################
-    def send_command(self, packet, resp = True, delay = 0, print_cmd = True, retryCount = 10):
+    def send_command(self, packet, resp = True, delay = 0.01, print_cmd = True, retryCount = 10):
         # Send the command and data
         if(print_cmd):
           print(str(datetime.datetime.now()) + " >", packet)
@@ -240,7 +240,7 @@ class HCI:
 
         # Send the command to encode the samples
         samplesHexString = samples.hex()
-        status_evt = self.send_command("02"+samplesHexString, print_cmd=True)
+        status_evt = self.send_command("02"+samplesHexString, print_cmd=False)
 
         # Check the error code
         if(status_evt[:4] != "0700"):
@@ -265,7 +265,7 @@ class HCI:
             frameBytes.append(int(byte,16))
 
         # Get the execution time
-        status_evt = self.send_command("05", print_cmd=True)
+        status_evt = self.send_command("05", print_cmd=False)
 
         # Convert the time to an integer
         execTimeString = status_evt[8:10] + status_evt[6:8] + status_evt[4:6] + status_evt[2:4]
@@ -295,7 +295,7 @@ class HCI:
 
         # Send the command to encode the samples
         dataHexString = data.hex()
-        status_evt = self.send_command("04"+dataHexString, print_cmd=True)
+        status_evt = self.send_command("04"+dataHexString, print_cmd=False)
 
         # Check the error code
         if(status_evt[:4] != "0800"):
@@ -318,7 +318,7 @@ class HCI:
             frameSamples.append(int(sample[2:],16))
 
         # Get the execution time
-        status_evt = self.send_command("05", print_cmd=True)
+        status_evt = self.send_command("05", print_cmd=False)
 
         # Convert the time to an integer
         execTimeString = status_evt[8:10] + status_evt[6:8] + status_evt[4:6] + status_evt[2:4]
